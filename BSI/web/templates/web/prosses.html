@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Processing Page</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Background gradient similar to Tailwind's from-blue-50 to-indigo-100 */
+    body {
+      background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+    }
+    /* Card styling with semi-transparency and blur */
+    #card {
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      max-width: 600px;
+      animation: fadeInUp 0.5s ease-out;
+    }
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    /* Rotating loading icon animation */
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #rotating-icon {
+      animation: rotate 2s linear infinite;
+    }
+    /* Circular progress styles */
+    #circle-base, #circle-progress {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #circle-base {
+      border: 4px solid #cfe2ff; /* light blue */
+    }
+    #circle-progress {
+      border: 4px solid #0d6efd; /* Bootstrap primary blue */
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      transition: transform 0.1s linear;
+    }
+    /* Fixed bottom navbar styles */
+    .fixed-bottom-navbar {
+      background: #fff;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+      padding: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="min-vh-100 d-flex align-items-center justify-content-center p-4">
+    <div id="card" class="p-4 shadow">
+      <div class="text-center">
+        <!-- Rotating Loading Icon -->
+        <div class="mb-4">
+          <div id="loading-icon" class="mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background-color: #cfe2ff;">
+            <i class="fas fa-sync-alt" id="rotating-icon" style="font-size: 2rem; color: #0d6efd;"></i>
+          </div>
+        </div>
+        <!-- Main message -->
+        <h1 class="h3 fw-bold text-dark mb-3">Your Request is Being Processed!</h1>
+        <p class="text-secondary mb-4">
+          Our team is reviewing your request and will send you an estimate within 24 hours.
+          <br>
+          <small class="text-muted">Check your email for updates.</small>
+        </p>
+        <!-- Circular progress indicator and progress bar -->
+        <div class="mb-4">
+          <div class="position-relative d-inline-block mb-3" style="width: 128px; height: 128px;">
+            <div id="circle-base"></div>
+            <div id="circle-progress"></div>
+            <div class="position-absolute top-50 start-50 translate-middle">
+              <span id="progress-text" class="fs-4 fw-bold" style="color: #0d6efd;">0%</span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center justify-content-center mb-3">
+            <span class="me-2">Processing</span>
+            <i class="fas fa-comment-dots" id="chat-icon" style="font-size: 1.25rem; color: #0d6efd;"></i>
+          </div>
+          <div class="progress" style="height: 8px;">
+            <div id="linear-progress" class="progress-bar" role="progressbar" style="width: 0; background: linear-gradient(to right, #0d6efd, #6610f2);" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        <!-- Informational message -->
+        <div class="bg-info bg-opacity-10 rounded p-3 mb-4">
+          <p class="text-info small mb-0">Quality matters to us! Our team is crafting the best estimate for you.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Bottom Navbar with Back to Home Button -->
+  <nav class="fixed-bottom fixed-bottom-navbar">
+    <div class="container d-flex justify-content-center">
+      <button class="btn btn-primary" onclick="history.back();">
+        <i class="fas fa-home"></i> Back to Home
+      </button>
+    </div>
+  </nav>
+
+  <!-- JavaScript for smooth progress animation using requestAnimationFrame and easing function -->
+  <script>
+    const progressTextEl = document.getElementById('progress-text');
+    const circleProgressEl = document.getElementById('circle-progress');
+    const linearProgressEl = document.getElementById('linear-progress');
+
+    let startTime = null;
+    const duration = 10000; // Total animation time in milliseconds
+
+    // Easing function: easeInOutQuad
+    function easeInOutQuad(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+
+    function animateProgress(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const easedT = easeInOutQuad(t);
+      const progress = easedT * 100;
+
+      progressTextEl.textContent = Math.floor(progress) + '%';
+      circleProgressEl.style.transform = 'rotate(' + (progress * 3.6) + 'deg)';
+      linearProgressEl.style.width = progress + '%';
+      linearProgressEl.setAttribute('aria-valuenow', progress);
+
+      if (t < 1) {
+        window.requestAnimationFrame(animateProgress);
+      }
+    }
+    window.requestAnimationFrame(animateProgress);
+
+    // Toggle chat icon scale for a typing-dots effect every 1000ms
+    let showTypingDots = true;
+    setInterval(() => {
+      const chatIcon = document.getElementById('chat-icon');
+      chatIcon.style.transform = showTypingDots ? "scale(0.5)" : "scale(1)";
+      showTypingDots = !showTypingDots;
+    }, 1000);
+  </script>
+  <!-- Bootstrap JS Bundle (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
